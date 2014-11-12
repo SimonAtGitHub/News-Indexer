@@ -1,0 +1,212 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package edu.buffalo.cse.irf14.analysis;
+
+import java.util.ArrayList;
+import java.util.regex.Pattern;
+
+/**
+ *
+ * @author san
+ */
+public class CapitalizationTokenFilter extends TokenFilter {
+
+    //Use find method
+    private static Pattern IS_CAMEL_CASE = Pattern.compile("^[A-Z][a-z]*");
+
+    //Use matches method
+    private static Pattern IS_ALL_UPPER_CASE = Pattern.compile("^[A-Z]+$");
+
+    /**
+     * @param stream
+     */
+    public CapitalizationTokenFilter(TokenStream stream) {
+        super(stream);
+        // TODO Auto-generated constructor stub
+    }
+
+    /* (non-Javadoc)
+     * @see edu.buffalo.cse.irf14.analysis.Analyzer#increment()
+     */
+    @Override
+    public boolean increment() throws TokenizerException {
+        // TODO Auto-generated method stub
+        boolean out = false;
+        StringBuilder contentToUpdate = new StringBuilder("");
+        int extraTokensRead = 0;
+        int nthCopyOfTokenNeeded = 1;
+
+
+        try {
+            //Write the unit business process for cleaning a single token.
+            if (getStream().hasNext()) {
+                Token wip = getStream().next();
+                String currTokenContent = wip.toString();
+                
+                if(wip.isFirstWordInSent()){
+                    if(isAllUpperCase(currTokenContent)){
+                        contentToUpdate.append(currTokenContent);
+                        //check next token
+                        
+                        boolean proceedNext = false;
+                        do {
+                            
+                            Token nextToken = getStream().getNthTokenCopy(nthCopyOfTokenNeeded++);
+                            if(nextToken != null && isCamelCased(nextToken.toString()) && !nextToken.isFirstWordInSent()){
+                                contentToUpdate.append(" ").append(nextToken.toString());
+                                proceedNext = true;
+                                extraTokensRead++;
+                            } else {
+                                proceedNext = false;
+                            }
+                        }while(proceedNext);
+                    
+                    } else {
+                        wip.setTermText(currTokenContent.toLowerCase());
+                    }
+                    
+                } else {
+                    if(isCamelCased(currTokenContent)){
+                        contentToUpdate.append(currTokenContent);
+                        //check next token
+                        boolean proceedNext = false;
+                        do {
+                            
+                            Token nextToken = getStream().getNthTokenCopy(nthCopyOfTokenNeeded++);
+                            if(nextToken != null && isCamelCased(nextToken.toString()) && !nextToken.isFirstWordInSent()){
+                                contentToUpdate.append(" ").append(nextToken.toString());
+                                proceedNext = true;
+                                extraTokensRead++;
+                            } else {
+                                proceedNext = false;
+                            }
+                        }while(proceedNext);
+                    
+                    }
+                    
+                }
+                
+                if(extraTokensRead > 0){
+                    wip.setTermText(contentToUpdate.toString());
+                    while(extraTokensRead != 0){
+                        getStream().next().setTermText("");
+                        extraTokensRead--;
+                    }
+                }
+                
+                out = true;
+
+                //Reset at the end for next iteration to avoid memory recreation
+                contentToUpdate = new StringBuilder("");
+                extraTokensRead = 0;
+                nthCopyOfTokenNeeded = 1;
+                
+            }
+        } catch (Exception e) {
+            throw new TokenizerException(e);
+        }
+        return out;
+    }
+
+    /* (non-Javadoc)
+     * @see edu.buffalo.cse.irf14.analysis.Analyzer#getStream()
+     */
+    @Override
+    public TokenStream getStream() {
+        // TODO Auto-generated method stub
+        return getTokenStream();
+    }
+
+    public TokenStream processEntireTokenStream() throws TokenizerException {
+        TokenStream out = getStream();
+
+        try {
+            while (increment()) {
+
+            }
+            getStream().reset();
+        } catch (Exception e) {
+            throw new TokenizerException(e);
+        }
+
+        return out;
+    }
+
+    public static boolean isCamelCased(String in) {
+        return IS_CAMEL_CASE.matcher(in).find();
+    }
+
+    public static boolean isAllUpperCase(String in) {
+        return IS_ALL_UPPER_CASE.matcher(in).matches();
+    }
+
+    //TODO: Sankar - Remove this method
+    public static boolean shouldLower(String in, boolean isFirstWordInSent) {
+        boolean out = true;
+        if (!in.isEmpty()) {
+            if (isAllUpperCase(in)) {
+                out = false;
+                if (!isFirstWordInSent && isCamelCased(in)) {
+                    out = false;
+                }
+            }
+        } else {
+            out = false;
+        }
+
+        return out;
+    }
+
+    public static void main(String[] args) throws TokenizerException {
+        
+        TokenFilter test = new CapitalizationTokenFilter(null);
+        
+        String rv[] = ((CapitalizationTokenFilter) test).runTest(TokenFilterType.CAPITALIZATION,"The. Though. For each. JAMES Cannot Be is Java Cup.");
+        System.out.println("\n");
+        for(String i: rv){
+            System.out.print(i + "|");
+        }
+
+    }
+    
+    public static String[] runTest(TokenFilterType type, String str) throws TokenizerException {
+		Tokenizer tkizer = new Tokenizer();
+		TokenStream tstream = tkizer.consume(str);
+		TokenFilterFactory factory = TokenFilterFactory.getInstance();
+		TokenFilter filter = factory.getFilterByType(type, tstream);
+		
+		while (filter.increment()) {
+			//Do nothing :/
+		}
+		
+		tstream = filter.getStream();
+		tstream.reset();
+		
+		ArrayList<String> list = new ArrayList<String>();
+		String s;
+		Token t;
+
+		while (tstream.hasNext()) {
+			t = tstream.next();
+
+			if (t != null) {
+				s = t.toString();
+				
+				if (s!= null && !s.isEmpty())
+					list.add(s);	
+			}
+		}
+		
+		String[] rv = new String[list.size()];
+		rv = list.toArray(rv);
+		tkizer = null;
+		tstream = null;
+		filter = null;
+		list = null;
+		return rv;
+	}
+    
+}
