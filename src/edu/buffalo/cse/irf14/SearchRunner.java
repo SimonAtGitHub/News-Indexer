@@ -22,12 +22,6 @@ import edu.buffalo.cse.irf14.index.IndexType;
 import edu.buffalo.cse.irf14.query.Query;
 import edu.buffalo.cse.irf14.query.QueryParser;
 
-/**
- * Main class to run the searcher.
- * As before implement all TODO methods unless marked for bonus
- * @author nikhillo
- *
- */
 public class SearchRunner {
 	public enum ScoringModel {TFIDF, OKAPI};
 	PrintStream stream;
@@ -44,7 +38,6 @@ public class SearchRunner {
 	 */
 	public SearchRunner(String indexDir, String corpusDir, 
 			char mode, PrintStream stream) {
-		//TODO: IMPLEMENT THIS METHOD
 		this.stream = stream;
 		this.corpusDir = corpusDir;
 		mergedDir = "Yankees";
@@ -64,7 +57,7 @@ public class SearchRunner {
         HashSet<String> filesMoved = new HashSet<String>();
         String[] catDirs = fileBaseDir.list();
         fileToDir.mkdir();
-        //System.out.println("Number of Dirs to move : " + catDirs.length);
+
         int actualFilesPresent = 0;
         for (String cat : catDirs) {
             File catDir = new File(corpusDir+ File.separator+ cat);
@@ -81,20 +74,16 @@ public class SearchRunner {
                     if(!filesMoved.contains(f)){
                         currFile.renameTo(new File(fileToDir.getAbsolutePath() + File.separator+ f));
                         filesMoved.add(f);
-                        //currFile.delete();
                     } else {
                         currFile.delete();
                     }
                 } catch (Exception e) {
-                        // TODO Auto-generated catch block
                         e.printStackTrace();
                 }					
             }
             catDir.delete();
         }
         
-        //System.out.println("Number of Files encountered : " + actualFilesPresent);
-        //System.out.println("Number of Files Moved : " + filesMoved.size());
     }
 
 	/**
@@ -103,9 +92,8 @@ public class SearchRunner {
 	 * @param model : Scoring Model to use for ranking results
 	 */
 	public void query(String userQuery, ScoringModel model) {
-		//TODO: IMPLEMENT THIS METHOD
 		//Forward Index -> docId - {term:term freq}
-		Map<Integer, Map<String, Integer>> forwardIndex = null; // = forwardIndex();
+		Map<Integer, Map<String, Integer>> forwardIndex = null; 
 		Map<Integer,Double> scoringMap = null;
 		long startTime = System.currentTimeMillis();
 		boolean isQueryValid = true;
@@ -283,7 +271,6 @@ public class SearchRunner {
 	 * @param queryFile : The file from which queries are to be read and executed
 	 */
 	public void query(File queryFile) {
-		//TODO: IMPLEMENT THIS METHOD
 		BufferedReader reader = null;
 		int queryCount = 0;
 		int results = 0;
@@ -302,11 +289,9 @@ public class SearchRunner {
 				String[] queryArray = line.split(":\\{");
 				String queryID = queryArray[0];	
 				String query = queryArray[1].split("}")[0];
-				//System.out.println(queryID + " " + query);
-				
+
 				Query queryObj = QueryParser.parse(query, "OR");
-				//Query queryObj = new Query(data);	//Check for null???		
-				
+
 				if(queryObj == null)
 					continue;
 				
@@ -352,7 +337,6 @@ public class SearchRunner {
 		stream.println("numResults=" + results);
 		stream.print(output);
 		stream.flush();
-		//stream.close();
 	}
 	
 	public Map<Integer, Map<String, Integer>> forwardIndexCreation(HashSet<Integer> docIdList, List<KeyValueVO<String, IndexType>> queryMap){
@@ -489,9 +473,6 @@ public class SearchRunner {
 				
 				temp = temp + (queryScore*queryScore);
 				queryMap.put(query, queryScore);
-				/*if(docScore.containsKey(query)){
-					finalScore += (docScore.get(query) * queryScore);
-				}*/
 			}
 			
 			temp = Math.sqrt(temp);
@@ -523,8 +504,7 @@ public class SearchRunner {
 			double idf = 0.0;
 			int termId, docFreq = 0;
 			double docScore = 0.0;
-			//double queryScore = 0.0;
-			
+
 			for(String term: tf.keySet()){
 				termFreq = tf.get(term);
 				termFreq = 1 + Math.log10(termFreq);
@@ -558,11 +538,9 @@ public class SearchRunner {
 				
 				//k1 = 0.5, b = 0.5, k3 = 1.2
 				docScore += (idf) * (((0.5 + 1.0) * termFreq)/ (0.5 * ((1.0 - 0.5) + (0.5 * (docLength/docLengthAvg))) + termFreq));
-				//queryScore += (idf) * (((1.2 + 1.0) * termFreq)/ (1.2 * ((1.0 - 0.75) + (0.75 * (docLength/docLengthAvg))) + termFreq)) * (((1.2 + 1.0) * termFreq) / (1.2 + termFreq));
 			}
 			
 			score.put(docId, docScore/docLengthAvg);
-			//TODO: How to get term frequency in a given query			
 		}
 		
 		return score;
