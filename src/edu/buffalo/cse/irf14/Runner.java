@@ -77,15 +77,6 @@ public class Runner {
 			//System.out.println("Final collection size: " + docCol.size());
 			//System.out.println("Random Print: \nFile Name: " + docCol.get(0000005).getField(FieldNames.FILEID)[0] + " " + docCol.get(11400).getField(FieldNames.CATEGORY)[0] + "\n Content:\n" + docCol.get(11400).getField(FieldNames.CONTENT)[0] );
 			writer.close();
-			PrintStream stream = null;
-			try {
-				stream = new PrintStream(new File(indexDir + File.separator + "output.txt"));
-			}catch (Exception e){
-				e.printStackTrace();
-			}
-			SearchRunner q = new SearchRunner(indexDir, ipDir, 'q',stream);
-//			q.getCorrections();
-			q.query(new File(indexDir + File.separator + "EvaluationMode.txt"));
 		} catch (IndexerException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
