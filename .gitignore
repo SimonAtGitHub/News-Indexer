@@ -1,0 +1,8 @@
+.classpath
+.project
+
+#class files
+*.class
+
+#settings
+*.prefs
